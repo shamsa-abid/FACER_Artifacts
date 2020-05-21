@@ -61,18 +61,18 @@ To replicate evaluation results for FACER with a similarity threshold alpha=0.5,
 ### Option 1:
 To view the metrics calculated for all values of minSup for a particular value of top N recommendations, three arguments are required, namely the name of the database, "false" and a value for top N indicating the number of recomemndations being evaluated. 
 ```
-<your root>\FACER_Replication_Pack>java -jar FACER_Evaluation.jar <db name> false <topN>
+<your root>\FACER_Replication_Pack>java -jar 4_FACER_Evaluation.jar <db name> false <topN>
 ```
 To view evaluation metrics for top 5 recommendations:
 ```
-<your root>\FACER_Replication_Pack>java -jar FACER_Evaluation.jar <db name> false 5
+<your root>\FACER_Replication_Pack>java -jar 4_FACER_Evaluation.jar <db name> false 5
 ```
 ### Option 2:
 To view the method bodies of recommendations made against an input method ID with specific values of minSup and topN:
 ```
-<your root>\FACER_Replication_Pack>java -jar FACER_Evaluation.jar <db name> true <topN> <minSup> <MID>
+<your root>\FACER_Replication_Pack>java -jar 4_FACER_Evaluation.jar <db name> true <topN> <minSup> <MID>
 ```
 To view the method bodies of recommendations made against an input method ID 33 with minSup=3 and topN=5:
 ```
-<your root>\FACER_Replication_Pack>java -jar FACER_Evaluation.jar <db name> true 5 3 33
+<your root>\FACER_Replication_Pack>java -jar 4_FACER_Evaluation.jar <db name> true 5 3 33
 ```
