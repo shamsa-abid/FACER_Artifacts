@@ -41,7 +41,7 @@ Once downloaded, extract each archive to a separate folder inside the Dataset fo
 ### Running FACER Program Analyzer
 To run program analyzer you need to supply three arguments; the dataset folder path, the name of the database you created and the path to rt.jar inside your Java installation
 ```
-<your root>\FACER_Replication_Pack>java -jar 2_FACERProgramAnalyzer.jar Dataset <DB name> "<your drive>:\\Program Files\\Java\\jre1.8.0_144\\lib\\rt.jar"
+<your root>\FACER_Replication_Pack>java -jar 2_FACER_Program_Analyzer.jar Dataset <DB name> "<your drive>:\\Program Files\\Java\\jre1.8.0_144\\lib\\rt.jar"
 ```
 Two new csv files will be created in an output folder 
 
