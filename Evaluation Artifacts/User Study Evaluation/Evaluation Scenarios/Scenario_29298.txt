@@ -1,0 +1,131 @@
+Evaluation ID:29298
+Application Category:weather
+Your Method's Feature Description: send Http Request to get weather
+-------------------------------------------------------
+Your Method's Body: 
+    public static void sendHttpRequest(final String address, final boolean getWeatherInfo, final HttpCallbackListener listener){
+        new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        HttpURLConnection connection=null;
+                        try{
+                         URL url=new URL(address);
+                            BufferedReader reader;
+                            connection=(HttpURLConnection) url.openConnection();
+                            connection.setRequestMethod("GET");
+                            if(getWeatherInfo){
+                                connection.setRequestProperty("apikey","Replace this string with your own baidu api key");
+                                connection.connect();
+                                InputStream in = connection.getInputStream();
+                                reader = new BufferedReader(new InputStreamReader(in,"UTF-8"));
+                            }
+                            else{
+                                connection.setConnectTimeout(8000);
+                                connection.setReadTimeout(8000);
+                                InputStream in = connection.getInputStream();
+                                reader = new BufferedReader(new InputStreamReader(in));
+                            }
+
+                            StringBuilder response=new StringBuilder();
+                            String line;
+                            while((line=reader.readLine())!=null){
+                                response.append(line);
+                                response.append("\r\n");
+                            }
+                            if(listener!=null){
+                               //callback onFinish()
+                                listener.onFinish(response.toString());
+                            }
+                        }catch (Exception e){
+                            if(listener!=null){
+                                listener.onError(e);
+                            }
+                        }
+                        finally{
+                            if(connection!=null){
+                                    connection.disconnect();
+                            }
+                        }
+                    }
+                }
+        ).start();
+    }
+-------------------------------------------------------
+Your Method's API calls:
+Thread.new
+Runnable.new
+URL.new
+URL.openConnection
+HttpURLConnection.setRequestMethod
+HttpURLConnection.setRequestProperty
+HttpURLConnection.connect
+HttpURLConnection.getInputStream
+BufferedReader.new
+InputStreamReader.new
+HttpURLConnection.setConnectTimeout
+HttpURLConnection.setReadTimeout
+StringBuilder.new
+BufferedReader.readLine
+StringBuilder.append
+StringBuilder.toString
+HttpURLConnection.disconnect
+ArrayList<Fragment>.new
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+    /**
+     * save the instance of County to the db
+     */
+    public void saveCounty(County county){
+        if(county!=null){
+            ContentValues values=new ContentValues();
+            values.put("county_name",county.getCountyName());
+            values.put("county_code",county.getCountyCode());
+            values.put("city_id",county.getCityId());
+            db.insert("County",null,values);
+        }
+    }
+-------------------------------------------------------
+Method API calls:
+ContentValues.new
+ContentValues.put
+SQLiteDatabase.insert
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+    /**
+     * read the info of all cities under a certain province
+     */
+    public List<City> loadCities(int provinceId){
+        List<City> list=new ArrayList<>();
+        Cursor cursor=db.query("City",null,"province_id=?",new String[]{String.valueOf(provinceId)},null,null,null);
+        if(cursor.moveToFirst()){
+            do{
+                City city=new City();
+                city.setId(cursor.getInt(cursor.getColumnIndex("id")));
+                city.setCityName(cursor.getString(cursor.getColumnIndex("city_name")));
+                city.setCityCode(cursor.getString(cursor.getColumnIndex("city_code")));
+                city.setProvinceId(provinceId);
+                list.add(city);
+            }
+            while(cursor.moveToNext());
+        }
+        cursor.close();
+        return  list;
+    }
+-------------------------------------------------------
+Method API calls:
+ArrayList<>.new
+SQLiteDatabase.query
+String.valueOf
+Cursor.moveToFirst
+Cursor.getInt
+Cursor.getColumnIndex
+Cursor.getString
+List<City>.add
+Cursor.moveToNext
+Cursor.close

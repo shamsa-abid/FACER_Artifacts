@@ -1,0 +1,204 @@
+Evaluation ID:29947
+Application Category:weather
+Your Method's Feature Description: check if network connection available
+-------------------------------------------------------
+Your Method's Body: 
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+-------------------------------------------------------
+Your Method's API calls:
+Context.getSystemService
+ConnectivityManager.getActiveNetworkInfo
+NetworkInfo.isConnected
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        ComponentName provider = new ComponentName(context.getPackageName(), getClass().getName());
+        int ids[] = appWidgetManager.getAppWidgetIds(provider);
+        onUpdate(context, appWidgetManager, ids);
+    }
+-------------------------------------------------------
+Method API calls:
+AppWidgetManager.getInstance
+ComponentName.new
+Context.getPackageName
+AppWidgetManager.getAppWidgetIds
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+    public void setCondition() {
+            String cond = json.getWeather().get(0).getDescription();
+            String[] strArray = cond.split(" ");
+            final StringBuilder builder = new StringBuilder();
+            for (String s : strArray) {
+                String cap = s.substring(0, 1).toUpperCase() + s.substring(1);
+                builder.append(cap.concat(" "));
+            }
+            condition.setText(builder.toString());
+    }
+-------------------------------------------------------
+Method API calls:
+String.split
+StringBuilder.new
+String.substring
+StringBuilder.append
+String.concat
+TextView.setText
+StringBuilder.toString
+-------------------------------------------------------
+Recommendation No. 3
+-------------------------------------------------------
+    public static Bitmap createWeatherIcon(Context context, String text) {
+        Bitmap bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_4444);
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint();
+        Typeface weatherFont = Typeface.createFromAsset(context.getAssets(), "fonts/weather-icons-v2.0.10.ttf");
+        paint.setAntiAlias(true);
+        paint.setSubpixelText(true);
+        paint.setTypeface(weatherFont);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(ContextCompat.getColor(context , R.color.textColor));
+        paint.setTextSize(180);
+        paint.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText(text, 128, 200, paint);
+        return bitmap;
+    }
+-------------------------------------------------------
+Method API calls:
+Bitmap.createBitmap
+Canvas.new
+Paint.new
+Typeface.createFromAsset
+Context.getAssets
+Paint.setAntiAlias
+Paint.setSubpixelText
+Paint.setTypeface
+Paint.setStyle
+Paint.setColor
+ContextCompat.getColor
+Paint.setTextSize
+Paint.setTextAlign
+Canvas.drawText
+-------------------------------------------------------
+Recommendation No. 4
+-------------------------------------------------------
+    public void loadTemperatureChart() {
+        temperatureChart.setDrawGridBackground(false);
+        temperatureChart.setBackgroundColor(Color.BLACK);
+        temperatureChart.setTouchEnabled(true);
+        temperatureChart.setDragEnabled(true);
+        temperatureChart.setMaxHighlightDistance(300);
+        temperatureChart.setPinchZoom(true);
+        temperatureChart.setPadding(2 , 2 , 2 , 2);
+        temperatureChart.getLegend().setEnabled(true);
+        temperatureChart.getLegend().setTextColor(Color.WHITE);
+
+        YAxis yAxisRight = temperatureChart.getAxisRight();
+        yAxisRight.setDrawGridLines(false);
+        yAxisRight.setDrawAxisLine(false);
+        yAxisRight.setDrawLabels(false);
+        yAxisRight.setTextColor(Color.WHITE);
+        yAxisRight.enableAxisLineDashedLine(2f , 4f , 2f);
+
+        YAxis yAxisLeft = temperatureChart.getAxisLeft();
+        yAxisLeft.setTextColor(Color.WHITE);
+
+        XAxis x = temperatureChart.getXAxis();
+        x.setEnabled(true);
+        x.setPosition(XAxis.XAxisPosition.BOTTOM);
+        x.setDrawGridLines(false);
+        x.setTextColor(Color.parseColor("#FFFFFF"));
+        x.setValueFormatter(new XFormatter(dates));
+
+        LineDataSet set;
+        if (temperatureChart.getData() != null) {
+            temperatureChart.getData().removeDataSet(temperatureChart.getData().getDataSetByIndex(
+                    temperatureChart.getData().getDataSetCount() - 1));
+            temperatureChart.getLegend().setTextColor(Color.parseColor("#FFFFFF"));
+        }
+        String temp = getString(R.string.pref_temp_header) + ", " + (PreferenceManager.getDefaultSharedPreferences(getContext()).getString(Constants.PREF_TEMPERATURE_UNITS , Constants.METRIC).equals(Constants.METRIC) ? getString(R.string.c) : getString(R.string.f));
+        set = new LineDataSet(tempEntries, temp);
+        set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        set.setCubicIntensity(0.2f);
+        set.setDrawCircles(false);
+        set.setLineWidth(2f);
+        set.setDrawValues(false);
+        set.setValueTextSize(10f);
+        set.setColor(Color.MAGENTA);
+        set.setHighlightEnabled(false);
+        set.setValueFormatter(mValueFormatter);
+
+        LineData data = new LineData(set);
+        temperatureChart.setData(data);
+
+        temperatureChart.invalidate();
+    }
+-------------------------------------------------------
+Method API calls:
+LineChart.setDrawGridBackground
+LineChart.setBackgroundColor
+LineChart.setTouchEnabled
+LineChart.setDragEnabled
+LineChart.setMaxHighlightDistance
+LineChart.setPinchZoom
+LineChart.setPadding
+LineChart.getLegend
+LineChart.getAxisRight
+YAxis.setDrawGridLines
+YAxis.setDrawAxisLine
+YAxis.setDrawLabels
+YAxis.setTextColor
+YAxis.enableAxisLineDashedLine
+LineChart.getAxisLeft
+LineChart.getXAxis
+XAxis.setEnabled
+XAxis.setPosition
+XAxis.setDrawGridLines
+XAxis.setTextColor
+Color.parseColor
+XAxis.setValueFormatter
+LineChart.getData
+PreferenceManager.getDefaultSharedPreferences
+LineDataSet.new
+LineDataSet.setMode
+LineDataSet.setCubicIntensity
+LineDataSet.setDrawCircles
+LineDataSet.setLineWidth
+LineDataSet.setDrawValues
+LineDataSet.setValueTextSize
+LineDataSet.setColor
+LineDataSet.setHighlightEnabled
+LineDataSet.setValueFormatter
+LineData.new
+LineChart.setData
+LineChart.invalidate
+-------------------------------------------------------
+Recommendation No. 5
+-------------------------------------------------------
+    public static void forceChangeLanguage(Activity activity) {
+        Intent intent = activity.getIntent();
+        if (intent == null) {
+            return;
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        activity.finish();
+        activity.overridePendingTransition(0, 15);
+        activity.startActivity(intent);
+        activity.overridePendingTransition(0, 0);
+    }
+-------------------------------------------------------
+Method API calls:
+Activity.getIntent
+Activity.finish
+Activity.overridePendingTransition
+Activity.startActivity

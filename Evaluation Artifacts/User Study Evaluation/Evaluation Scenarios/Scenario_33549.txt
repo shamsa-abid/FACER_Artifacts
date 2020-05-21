@@ -1,0 +1,79 @@
+Evaluation ID:33549
+Application Category:weather
+Your Method's Feature Description: creates a new memory cache to store the weather icons
+-------------------------------------------------------
+Your Method's Body: 
+    /**
+     * Obtains or creates a new memory cache to store the weather icons.
+     */
+    private void setIconMemoryCache() {
+        IconCacheRetainFragment retainFragment =
+                IconCacheRetainFragment.findOrCreateRetainFragment(getSupportFragmentManager());
+        iconCache = retainFragment.iconCache;
+        if (iconCache == null) {
+            // maximum available VM memory, stored in kilobytes
+            int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+            // we use 1/8th of the available memory for this memory cache
+            int cacheSize = maxMemory / 8;
+
+            iconCache = new LruCache<String, Bitmap>(cacheSize) {
+
+                @Override
+                protected int sizeOf(String key, Bitmap bitmap) {
+                    // the cache size will be measured in kilobytes rather than number of items
+                    return bitmap.getByteCount() / 1024;
+                }
+            };
+
+        }
+        retainFragment.iconCache = iconCache;
+    }
+-------------------------------------------------------
+Your Method's API calls:
+Runtime.getRuntime
+LruCache<String,Bitmap>.new
+Bitmap.getByteCount
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+    /**
+     * Determines whether the user's device can connect to network at the moment.
+     */
+    public static boolean isUserOnline(Context context) {
+        ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isConnected();
+    }
+-------------------------------------------------------
+Method API calls:
+Context.getSystemService
+ConnectivityManager.getActiveNetworkInfo
+NetworkInfo.isConnected
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+    /**
+     * Changes the name of the specified city in the {@link
+     * com.haringeymobile.ukweather.database.CityTable}.
+     *
+     * @param cityId  Open Weather Map city ID
+     * @param newName the new (user-chosen) name for the city
+     */
+    void renameCity(int cityId, String newName) {
+        ContentValues newValues = new ContentValues();
+        newValues.put(CityTable.COLUMN_NAME, newName);
+        context.getContentResolver().update(
+                WeatherContentProvider.CONTENT_URI_CITY_RECORDS, newValues,
+                CityTable.COLUMN_CITY_ID + "=?",
+                new String[]{Integer.toString(cityId)});
+    }
+-------------------------------------------------------
+Method API calls:
+ContentValues.new
+ContentValues.put
+Context.getContentResolver
+Integer.toString

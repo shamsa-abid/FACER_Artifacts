@@ -1,0 +1,298 @@
+Evaluation ID:14435
+Application Category:music
+Your Method's Feature Description: set data source for media player
+-------------------------------------------------------
+Your Method's Body: 
+        private boolean setDataSourceImpl(MediaPlayer player, String path) {
+            try {
+                player.reset();
+                player.setOnPreparedListener(null);
+                if (path.startsWith("content://")) {
+                    player.setDataSource(ApolloService.this, Uri.parse(path));
+                } else {
+                    player.setDataSource(path);
+                }
+                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                player.prepare();
+            } catch (IOException ex) {
+                return false;
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
+            player.setOnCompletionListener(listener);
+            player.setOnErrorListener(errorListener);
+            Intent i = new Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION);
+            i.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, getAudioSessionId());
+            i.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, getPackageName());
+            sendBroadcast(i);
+
+            VisualizerUtils.initVisualizer( player );
+            return true;
+        }
+-------------------------------------------------------
+Your Method's API calls:
+MediaPlayer.reset
+MediaPlayer.setOnPreparedListener
+String.startsWith
+MediaPlayer.setDataSource
+Uri.parse
+MediaPlayer.setAudioStreamType
+MediaPlayer.prepare
+MediaPlayer.setOnCompletionListener
+MediaPlayer.setOnErrorListener
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                switch (what) {
+                    case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                        mIsInitialized = false;
+                        mCurrentMediaPlayer.release();
+                        // Creating a new MediaPlayer and settings its wakemode
+                        // does not
+                        // require the media service, so it's OK to do this now,
+                        // while the
+                        // service is still being restarted
+                        mCurrentMediaPlayer = new MediaPlayer();
+                        mCurrentMediaPlayer
+                                .setWakeMode(ApolloService.this, PowerManager.PARTIAL_WAKE_LOCK);
+                        mHandler.sendMessageDelayed(mHandler.obtainMessage(SERVER_DIED), 2000);
+                        return true;
+                    default:
+                        Log.d("MultiPlayer", "Error: " + what + "," + extra);
+                        break;
+                }
+                return false;
+            }
+-------------------------------------------------------
+Method API calls:
+MediaPlayer.release
+MediaPlayer.new
+MediaPlayer.setWakeMode
+Handler.sendMessageDelayed
+Handler.obtainMessage
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+
+            TextView tv1 = (TextView)view.findViewById(R.id.listview_item_line_one);
+            tv1.setTextColor(Color.BLACK);
+            TextView tv2 = (TextView)view.findViewById(R.id.listview_item_line_two);
+            tv2.setTextColor(Color.BLACK);
+            ImageView iv = (ImageView)view.findViewById(R.id.listview_item_image);
+            iv.setVisibility(View.GONE);
+            FrameLayout fl = (FrameLayout)view.findViewById(R.id.track_list_context_frame);
+            fl.setVisibility(View.GONE);
+            ViewGroup.LayoutParams p = iv.getLayoutParams();
+            if (p == null) {
+                // seen this happen, not sure why
+                DatabaseUtils.dumpCursor(cursor);
+                return;
+            }
+            p.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+            p.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+
+            String mimetype = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Media.MIME_TYPE));
+
+            if (mimetype == null) {
+                mimetype = "audio/";
+            }
+            if (mimetype.equals("artist")) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Artists.ARTIST));
+                String displayname = name;
+                boolean isunknown = false;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown);
+                    isunknown = true;
+                }
+                tv1.setText(displayname);
+
+                int numalbums = cursor.getInt(cursor.getColumnIndexOrThrow("data1"));
+                int numsongs = cursor.getInt(cursor.getColumnIndexOrThrow("data2"));
+
+                String songs_albums = MusicUtils.makeAlbumsLabel(context, numalbums, numsongs,
+                        isunknown);
+
+                tv2.setText(songs_albums);
+
+            } else if (mimetype.equals("album")) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Albums.ALBUM));
+                String displayname = name;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown);
+                }
+                tv1.setText(displayname);
+
+                name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Artists.ARTIST));
+                displayname = name;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown);
+                }
+                tv2.setText(displayname);
+
+            } else if (mimetype.startsWith("audio/") || mimetype.equals("application/ogg")
+                    || mimetype.equals("application/x-ogg")) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Media.TITLE));
+                tv1.setText(name);
+
+                String displayname = cursor.getString(cursor
+                        .getColumnIndexOrThrow(Audio.Artists.ARTIST));
+                if (displayname == null || displayname.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown);
+                }
+                name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Albums.ALBUM));
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    name = context.getString(R.string.unknown);
+                }
+                tv2.setText(displayname + " - " + name);
+            }
+        }
+-------------------------------------------------------
+Method API calls:
+View.findViewById
+TextView.setTextColor
+ImageView.setVisibility
+FrameLayout.setVisibility
+ImageView.getLayoutParams
+DatabaseUtils.dumpCursor
+Cursor.getString
+Cursor.getColumnIndexOrThrow
+String.equals
+Context.getString
+TextView.setText
+Cursor.getInt
+String.startsWith
+-------------------------------------------------------
+Recommendation No. 3
+-------------------------------------------------------
+    /**
+     * @param context
+     * @param numalbums
+     * @param numsongs
+     * @param isUnknown
+     * @return a string based on the number of albums for an artist or songs for
+     *         an album
+     */
+    public static String makeAlbumsLabel(Context mContext, int numalbums, int numsongs,
+            boolean isUnknown) {
+
+        StringBuilder songs_albums = new StringBuilder();
+
+        Resources r = mContext.getResources();
+        if (isUnknown) {
+            String f = r.getQuantityText(R.plurals.Nsongs, numsongs).toString();
+            sFormatBuilder.setLength(0);
+            sFormatter.format(f, Integer.valueOf(numsongs));
+            songs_albums.append(sFormatBuilder);
+        } else {
+            String f = r.getQuantityText(R.plurals.Nalbums, numalbums).toString();
+            sFormatBuilder.setLength(0);
+            sFormatter.format(f, Integer.valueOf(numalbums));
+            songs_albums.append(sFormatBuilder);
+            songs_albums.append("\n");
+        }
+        return songs_albums.toString();
+    }
+-------------------------------------------------------
+Method API calls:
+StringBuilder.new
+Context.getResources
+Resources.getQuantityText
+StringBuilder.setLength
+Formatter.format
+Integer.valueOf
+StringBuilder.append
+StringBuilder.toString
+-------------------------------------------------------
+Recommendation No. 4
+-------------------------------------------------------
+    /**
+     * @param context
+     * @param secs
+     * @return time String
+     */
+    public static String makeTimeString(Context context, long secs) {
+
+        String durationformat = context.getString(secs < 3600 ? R.string.durationformatshort
+                : R.string.durationformatlong);
+
+        /*
+         * Provide multiple arguments so the format can be changed easily by
+         * modifying the xml.
+         */
+        sFormatBuilder.setLength(0);
+
+        final Object[] timeArgs = sTimeArgs;
+        timeArgs[0] = secs / 3600;
+        timeArgs[1] = secs / 60;
+        timeArgs[2] = secs / 60 % 60;
+        timeArgs[3] = secs;
+        timeArgs[4] = secs % 60;
+
+        return sFormatter.format(durationformat, timeArgs).toString();
+    }
+-------------------------------------------------------
+Method API calls:
+Context.getString
+StringBuilder.setLength
+Formatter.format
+-------------------------------------------------------
+Recommendation No. 5
+-------------------------------------------------------
+    private String makePlaylistName() {
+
+        String template = getString(R.string.new_playlist_name_template);
+        int num = 1;
+
+        String[] cols = new String[] {
+            Audio.Playlists.NAME
+        };
+        ContentResolver resolver = getContentResolver();
+        String whereclause = Audio.Playlists.NAME + " != ''";
+        Cursor cursor = resolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, cols,
+                whereclause, null, Audio.Playlists.NAME);
+
+        if (cursor == null)
+            return null;
+
+        String suggestedname;
+        suggestedname = String.format(template, num++);
+
+        // Need to loop until we've made 1 full pass through without finding a
+        // match. Looping more than once shouldn't happen very often, but will
+        // happen if you have playlists named
+        // "New Playlist 1"/10/2/3/4/5/6/7/8/9, where making only one pass would
+        // result in "New Playlist 10" being erroneously picked for the new
+        // name.
+        boolean done = false;
+        while (!done) {
+            done = true;
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                String playlistname = cursor.getString(0);
+                if (playlistname.compareToIgnoreCase(suggestedname) == 0) {
+                    suggestedname = String.format(template, num++);
+                    done = false;
+                }
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
+        return suggestedname;
+    };
+-------------------------------------------------------
+Method API calls:
+ContentResolver.query
+String.format
+Cursor.moveToFirst
+Cursor.isAfterLast
+Cursor.getString
+String.compareToIgnoreCase
+Cursor.moveToNext
+Cursor.close

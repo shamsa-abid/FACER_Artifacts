@@ -1,0 +1,340 @@
+Evaluation ID:14490
+Application Category:music
+Your Method's Feature Description: receive key press to start stop pause media
+-------------------------------------------------------
+Your Method's Body: 
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        String intentAction = intent.getAction();
+        if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intentAction)) {
+            Intent i = new Intent(context, ApolloService.class);
+            i.setAction(ApolloService.SERVICECMD);
+            i.putExtra(ApolloService.CMDNAME, ApolloService.CMDPAUSE);
+            context.startService(i);
+        } else if (Intent.ACTION_MEDIA_BUTTON.equals(intentAction)) {
+            KeyEvent event = (KeyEvent)intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+
+            if (event == null) {
+                return;
+            }
+
+            int keycode = event.getKeyCode();
+            int action = event.getAction();
+            long eventtime = event.getEventTime();
+            int buttonId = intent.getIntExtra(ApolloService.CMDNOTIF, 0);
+
+            // single quick press: pause/resume.
+            // double press: next track
+            // long press: start auto-shuffle mode.
+
+            String command = null;
+            switch (keycode) {
+                case KeyEvent.KEYCODE_MEDIA_STOP:
+                    command = ApolloService.CMDSTOP;
+                    break;
+                case KeyEvent.KEYCODE_HEADSETHOOK:
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    command = ApolloService.CMDTOGGLEPAUSE;
+                    break;
+                case KeyEvent.KEYCODE_MEDIA_NEXT:
+                    command = ApolloService.CMDNEXT;
+                    break;
+                case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                    command = ApolloService.CMDPREVIOUS;
+                    break;
+                case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                    command = ApolloService.CMDPAUSE;
+                    break;
+                case KeyEvent.KEYCODE_MEDIA_PLAY:
+                    command = ApolloService.CMDPLAY;
+                    break;
+            }
+
+            if (command != null) {
+                if (action == KeyEvent.ACTION_DOWN) {
+                    if (mDown && (buttonId == 0)) {
+                        if ((ApolloService.CMDTOGGLEPAUSE.equals(command) || ApolloService.CMDPLAY
+                                .equals(command))
+                                && mLastClickTime != 0
+                                && eventtime - mLastClickTime > LONG_PRESS_DELAY) {
+                            mHandler.sendMessage(mHandler.obtainMessage(MSG_LONGPRESS_TIMEOUT,
+                                    context));
+                        }
+                    } else if (event.getRepeatCount() == 0) {
+                        // only consider the first event in a sequence, not the
+                        // repeat events,
+                        // so that we don't trigger in cases where the first
+                        // event went to
+                        // a different app (e.g. when the user ends a phone call
+                        // by
+                        // long pressing the headset button)
+
+                        // The service may or may not be running, but we need to
+                        // send it
+                        // a command.
+                        Intent i = new Intent(context, ApolloService.class);
+                        i.setAction(ApolloService.SERVICECMD);
+                        i.putExtra(ApolloService.CMDNOTIF, buttonId);
+                        if (keycode == KeyEvent.KEYCODE_HEADSETHOOK
+                                && eventtime - mLastClickTime < 300) {
+                            i.putExtra(ApolloService.CMDNAME, ApolloService.CMDNEXT);
+                            context.startService(i);
+                            mLastClickTime = 0;
+                        } else {
+                            i.putExtra(ApolloService.CMDNAME, command);
+                            context.startService(i);
+                            mLastClickTime = eventtime;
+                        }
+
+                        mLaunched = false;
+                        if (buttonId == 0) {
+                            mDown = true;
+                        }
+                    }
+                } else {
+                    mHandler.removeMessages(MSG_LONGPRESS_TIMEOUT);
+                    mDown = false;
+                }
+                if (isOrderedBroadcast()) {
+                    abortBroadcast();
+                }
+            }
+        }
+    }
+-------------------------------------------------------
+Your Method's API calls:
+AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals
+Context.startService
+Intent.ACTION_MEDIA_BUTTON.equals
+KeyEvent.getKeyCode
+KeyEvent.getAction
+KeyEvent.getEventTime
+String.equals
+Handler.sendMessage
+Handler.obtainMessage
+KeyEvent.getRepeatCount
+Handler.removeMessages
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+    /**
+     * @param artistName
+     * @param id
+     * @param key
+     * @param context
+     */
+    public static void setArtistId(String artistName, long id, String key, Context context) {
+        SharedPreferences settings = context.getSharedPreferences(key, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putLong(artistName, id);
+        editor.commit();
+    }
+-------------------------------------------------------
+Method API calls:
+Context.getSharedPreferences
+SharedPreferences.edit
+Editor.putLong
+Editor.commit
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+        private boolean setDataSourceImpl(MediaPlayer player, String path) {
+            try {
+                player.reset();
+                player.setOnPreparedListener(null);
+                if (path.startsWith("content://")) {
+                    player.setDataSource(ApolloService.this, Uri.parse(path));
+                } else {
+                    player.setDataSource(path);
+                }
+                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                player.prepare();
+            } catch (IOException ex) {
+                return false;
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
+            player.setOnCompletionListener(listener);
+            player.setOnErrorListener(errorListener);
+            Intent i = new Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION);
+            i.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, getAudioSessionId());
+            i.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, getPackageName());
+            sendBroadcast(i);
+
+            VisualizerUtils.initVisualizer( player );
+            return true;
+        }
+-------------------------------------------------------
+Method API calls:
+MediaPlayer.reset
+MediaPlayer.setOnPreparedListener
+String.startsWith
+MediaPlayer.setDataSource
+Uri.parse
+MediaPlayer.setAudioStreamType
+MediaPlayer.prepare
+MediaPlayer.setOnCompletionListener
+MediaPlayer.setOnErrorListener
+-------------------------------------------------------
+Recommendation No. 3
+-------------------------------------------------------
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                switch (what) {
+                    case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                        mIsInitialized = false;
+                        mCurrentMediaPlayer.release();
+                        // Creating a new MediaPlayer and settings its wakemode
+                        // does not
+                        // require the media service, so it's OK to do this now,
+                        // while the
+                        // service is still being restarted
+                        mCurrentMediaPlayer = new MediaPlayer();
+                        mCurrentMediaPlayer
+                                .setWakeMode(ApolloService.this, PowerManager.PARTIAL_WAKE_LOCK);
+                        mHandler.sendMessageDelayed(mHandler.obtainMessage(SERVER_DIED), 2000);
+                        return true;
+                    default:
+                        Log.d("MultiPlayer", "Error: " + what + "," + extra);
+                        break;
+                }
+                return false;
+            }
+-------------------------------------------------------
+Method API calls:
+MediaPlayer.release
+MediaPlayer.new
+MediaPlayer.setWakeMode
+Handler.sendMessageDelayed
+Handler.obtainMessage
+-------------------------------------------------------
+Recommendation No. 4
+-------------------------------------------------------
+	public static File getImageFromGallery( Context context, ImageInfo imageInfo ){		
+		String albumArt = ( imageInfo.type == TYPE_ALBUM ) ? imageInfo.data[3] : imageInfo.data[1];	  
+        if(albumArt != null){
+        	try{
+        		File orgFile = new File(albumArt);
+        		File newFile = new File(context.getExternalCacheDir(), createShortTag(imageInfo)+IMAGE_EXTENSION);
+        		InputStream in = new FileInputStream(orgFile);
+        		OutputStream out = new FileOutputStream(newFile);
+        		byte[] buf = new byte[1024];
+        		int len;
+        		while ((len = in.read(buf)) > 0){
+        			out.write(buf, 0, len);
+        		}
+        		in.close();
+        		out.close();
+	        	return newFile;
+        	}
+        	catch( Exception e){
+        	}
+        }
+        return null;
+	}
+-------------------------------------------------------
+Method API calls:
+File.new
+Context.getExternalCacheDir
+FileInputStream.new
+FileOutputStream.new
+InputStream.read
+OutputStream.write
+InputStream.close
+OutputStream.close
+-------------------------------------------------------
+Recommendation No. 5
+-------------------------------------------------------
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+
+            TextView tv1 = (TextView)view.findViewById(R.id.listview_item_line_one);
+            tv1.setTextColor(Color.BLACK);
+            TextView tv2 = (TextView)view.findViewById(R.id.listview_item_line_two);
+            tv2.setTextColor(Color.BLACK);
+            ImageView iv = (ImageView)view.findViewById(R.id.listview_item_image);
+            iv.setVisibility(View.GONE);
+            FrameLayout fl = (FrameLayout)view.findViewById(R.id.track_list_context_frame);
+            fl.setVisibility(View.GONE);
+            ViewGroup.LayoutParams p = iv.getLayoutParams();
+            if (p == null) {
+                // seen this happen, not sure why
+                DatabaseUtils.dumpCursor(cursor);
+                return;
+            }
+            p.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+            p.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+
+            String mimetype = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Media.MIME_TYPE));
+
+            if (mimetype == null) {
+                mimetype = "audio/";
+            }
+            if (mimetype.equals("artist")) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Artists.ARTIST));
+                String displayname = name;
+                boolean isunknown = false;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown);
+                    isunknown = true;
+                }
+                tv1.setText(displayname);
+
+                int numalbums = cursor.getInt(cursor.getColumnIndexOrThrow("data1"));
+                int numsongs = cursor.getInt(cursor.getColumnIndexOrThrow("data2"));
+
+                String songs_albums = MusicUtils.makeAlbumsLabel(context, numalbums, numsongs,
+                        isunknown);
+
+                tv2.setText(songs_albums);
+
+            } else if (mimetype.equals("album")) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Albums.ALBUM));
+                String displayname = name;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown);
+                }
+                tv1.setText(displayname);
+
+                name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Artists.ARTIST));
+                displayname = name;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown);
+                }
+                tv2.setText(displayname);
+
+            } else if (mimetype.startsWith("audio/") || mimetype.equals("application/ogg")
+                    || mimetype.equals("application/x-ogg")) {
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Media.TITLE));
+                tv1.setText(name);
+
+                String displayname = cursor.getString(cursor
+                        .getColumnIndexOrThrow(Audio.Artists.ARTIST));
+                if (displayname == null || displayname.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown);
+                }
+                name = cursor.getString(cursor.getColumnIndexOrThrow(Audio.Albums.ALBUM));
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    name = context.getString(R.string.unknown);
+                }
+                tv2.setText(displayname + " - " + name);
+            }
+        }
+-------------------------------------------------------
+Method API calls:
+View.findViewById
+TextView.setTextColor
+ImageView.setVisibility
+FrameLayout.setVisibility
+ImageView.getLayoutParams
+DatabaseUtils.dumpCursor
+Cursor.getString
+Cursor.getColumnIndexOrThrow
+String.equals
+Context.getString
+TextView.setText
+Cursor.getInt
+String.startsWith

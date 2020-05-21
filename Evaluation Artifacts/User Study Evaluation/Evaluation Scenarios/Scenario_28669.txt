@@ -1,0 +1,203 @@
+Evaluation ID:28669
+Application Category:weather
+Your Method's Feature Description: save forecast in database
+-------------------------------------------------------
+Your Method's Body: 
+    /**
+     * Methods for TABLE_FORECAST
+     */
+    public synchronized void addForecast(Forecast forecast) {
+        SQLiteDatabase database = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(FORECAST_CITY_ID, forecast.getCity_id());
+        values.put(FORECAST_COLUMN_TIME_MEASUREMENT, forecast.getTimestamp());
+        values.put(FORECAST_COLUMN_FORECAST_FOR, forecast.getForecastTime().getTime());
+        values.put(FORECAST_COLUMN_WEATHER_ID, forecast.getWeatherID());
+        values.put(FORECAST_COLUMN_TEMPERATURE_CURRENT, forecast.getTemperature());
+        values.put(FORECAST_COLUMN_HUMIDITY, forecast.getHumidity());
+        values.put(FORECAST_COLUMN_PRESSURE, forecast.getPressure());
+
+        database.insert(TABLE_FORECAST, null, values);
+        database.close();
+    }
+-------------------------------------------------------
+Your Method's API calls:
+ContentValues.new
+ContentValues.put
+SQLiteDatabase.insert
+SQLiteDatabase.close
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+    /**
+     * Shows an error that the data could not be retrieved.
+     *
+     * @param error The error that occurred while executing the HTTP request.
+     */
+    @Override
+    public void processFailScenario(final VolleyError error) {
+        Handler h = new Handler(this.context.getMainLooper());
+        h.post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context, context.getResources().getString(R.string.error_add_city), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+-------------------------------------------------------
+Method API calls:
+Handler.new
+Handler.post
+Runnable.new
+Context.getResources
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+    public List<County> queryAll() {
+        Cursor cursor = mDatabase.query(
+                Consts.DATABASE_TABLE_COUNTY,
+                new String[]{County.KEY_NAME, County.KEY_NAME_EN, County.KEY_CITY, County.KEY_PROVINCE, County.KEY_CODE},
+                null, null, null, null, null);
+        List<County> countyList = new ArrayList<>();
+        while (cursor.moveToNext()) {
+            County county = new County();
+            county.setName(cursor.getString(cursor.getColumnIndex(County.KEY_NAME)));
+            county.setNameEn(cursor.getString(cursor.getColumnIndex(County.KEY_NAME_EN)));
+            county.setCity(cursor.getString(cursor.getColumnIndex(County.KEY_CITY)));
+            county.setProvince(cursor.getString(cursor.getColumnIndex(County.KEY_PROVINCE)));
+            county.setCode(cursor.getString(cursor.getColumnIndex(County.KEY_CODE)));
+            countyList.add(county);
+        }
+        cursor.close();
+        return countyList;
+    }
+-------------------------------------------------------
+Method API calls:
+SQLiteDatabase.query
+ArrayList<>.new
+Cursor.moveToNext
+Cursor.getString
+Cursor.getColumnIndex
+List<County>.add
+Cursor.close
+-------------------------------------------------------
+Recommendation No. 3
+-------------------------------------------------------
+    public static void sendHttpRequest(final String address, final HttpCallbackListener listener) {
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                HttpURLConnection connection = null;
+                try {
+                    URL url = new URL(address);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setConnectTimeout(8000);
+                    connection.setReadTimeout(8000);
+                    InputStream in = connection.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    if (listener != null) {
+                        // ??onFinish()??
+                        listener.onFinish(response.toString());
+                    }
+                } catch (Exception e) {
+                    if (listener != null) {
+                        // ??onError()??
+                        listener.onError(e);
+                    }
+                } finally {
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                }
+            }
+
+        }).start();
+    }
+-------------------------------------------------------
+Method API calls:
+Thread.new
+Runnable.new
+URL.new
+URL.openConnection
+HttpURLConnection.setRequestMethod
+HttpURLConnection.setConnectTimeout
+HttpURLConnection.setReadTimeout
+HttpURLConnection.getInputStream
+BufferedReader.new
+InputStreamReader.new
+StringBuilder.new
+BufferedReader.readLine
+StringBuilder.append
+StringBuilder.toString
+HttpURLConnection.disconnect
+SimpleDateFormat.new
+-------------------------------------------------------
+Recommendation No. 4
+-------------------------------------------------------
+    /**
+     * @see IDataExtractor#extractRadiusSearchItemData(String)
+     */
+    @Override
+    public RadiusSearchItem extractRadiusSearchItemData(String data) {
+        try {
+            JSONObject jsonData = new JSONObject(data);
+            JSONObject jsonMain = jsonData.getJSONObject("main");
+            JSONArray jsonWeatherArray = jsonData.getJSONArray("weather");
+            JSONObject jsonWeather = new JSONObject(jsonWeatherArray.get(0).toString());
+            IApiToDatabaseConversion conversion = new OwmToDatabaseConversion();
+
+            return new RadiusSearchItem(
+                    jsonData.getString("name"),
+                    (float) jsonMain.getDouble("temp"),
+                    conversion.convertWeatherCategory(jsonWeather.getString("id"))
+            );
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+-------------------------------------------------------
+Method API calls:
+JSONObject.new
+JSONObject.getJSONObject
+JSONObject.getJSONArray
+JSONArray.get
+JSONObject.getString
+JSONObject.getDouble
+JSONException.printStackTrace
+-------------------------------------------------------
+Recommendation No. 5
+-------------------------------------------------------
+    /**
+     * 16?????ASCII???
+     * @param hex
+     * @return
+     */
+    public static String convertHexToString(String hex){
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < hex.length() - 1; i += 2){
+            String output = hex.substring(i, (i + 2));
+            int decimal = Integer.parseInt(output, 16);
+            sb.append((char)decimal);
+        }
+        return sb.toString();
+    }
+-------------------------------------------------------
+Method API calls:
+StringBuilder.new
+String.length
+String.substring
+Integer.parseInt
+StringBuilder.append
+StringBuilder.toString

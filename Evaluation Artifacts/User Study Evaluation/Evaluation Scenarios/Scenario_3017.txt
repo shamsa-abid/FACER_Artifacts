@@ -1,0 +1,198 @@
+Evaluation ID:3017
+Application Category:file
+Your Method's Feature Description: draw bitmap
+-------------------------------------------------------
+Your Method's Body: 
+        private static Bitmap drawable2Bitmap(Drawable drawable) {
+            if (drawable == null) {
+                return null;
+            }
+            // ? drawable ???
+            int w = drawable.getIntrinsicWidth();
+            int h = drawable.getIntrinsicHeight();
+            // ? drawable ?????
+            Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+                    : Bitmap.Config.RGB_565;
+            // ???? bitmap
+            Bitmap bitmap = Bitmap.createBitmap(w, h, config);
+            // ???? bitmap ???
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, w, h);
+            // ? drawable ???????
+            drawable.draw(canvas);
+            return bitmap;
+        }
+-------------------------------------------------------
+Your Method's API calls:
+Drawable.getIntrinsicWidth
+Drawable.getIntrinsicHeight
+Drawable.getOpacity
+Bitmap.createBitmap
+Canvas.new
+Drawable.setBounds
+Drawable.draw
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+    private ACache(File cacheDir, long max_size, int max_count) {
+        if (!cacheDir.exists() && !cacheDir.mkdirs()) {
+            throw new RuntimeException("can't make dirs in "
+                    + cacheDir.getAbsolutePath());
+        }
+        mCache = new ACacheManager(cacheDir, max_size, max_count);
+    }
+-------------------------------------------------------
+Method API calls:
+File.exists
+File.mkdirs
+RuntimeException.new
+File.getAbsolutePath
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+    public static ACache get(File cacheDir, long max_zise, int max_count) {
+        ACache manager = mInstanceMap.get(cacheDir.getAbsoluteFile() + myPid());
+        if (manager == null) {
+            manager = new ACache(cacheDir, max_zise, max_count);
+            mInstanceMap.put(cacheDir.getAbsolutePath() + myPid(), manager);
+        }
+        return manager;
+    }
+-------------------------------------------------------
+Method API calls:
+Map<String,ACache>.get
+File.getAbsoluteFile
+Map<String,ACache>.put
+File.getAbsolutePath
+-------------------------------------------------------
+Recommendation No. 3
+-------------------------------------------------------
+    /**
+     * ?? String?? ? ???
+     *
+     * @param key
+     *            ???key
+     * @param value
+     *            ???String??
+     */
+    public void put(String key, String value) {
+        File file = mCache.newFile(key);
+        BufferedWriter out = null;
+        try {
+            out = new BufferedWriter(new FileWriter(file), 1024);
+            out.write(value);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (out != null) {
+                try {
+                    out.flush();
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            mCache.put(file);
+        }
+    }
+-------------------------------------------------------
+Method API calls:
+BufferedWriter.new
+FileWriter.new
+BufferedWriter.write
+IOException.printStackTrace
+BufferedWriter.flush
+BufferedWriter.close
+-------------------------------------------------------
+Recommendation No. 4
+-------------------------------------------------------
+    /**
+     * ?? String??
+     *
+     * @param key
+     * @return String ??
+     */
+    public String getAsString(String key) {
+        File file = mCache.get(key);
+        if (!file.exists())
+            return null;
+        boolean removeFile = false;
+        BufferedReader in = null;
+        try {
+            in = new BufferedReader(new FileReader(file));
+            String readString = "";
+            String currentLine;
+            while ((currentLine = in.readLine()) != null) {
+                readString += currentLine;
+            }
+            if (!Utils.isDue(readString)) {
+                return Utils.clearDateInfo(readString);
+            } else {
+                removeFile = true;
+                return null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (removeFile)
+                remove(key);
+        }
+    }
+-------------------------------------------------------
+Method API calls:
+File.exists
+BufferedReader.new
+FileReader.new
+BufferedReader.readLine
+IOException.printStackTrace
+BufferedReader.close
+-------------------------------------------------------
+Recommendation No. 5
+-------------------------------------------------------
+    /**
+     * ?? byte?? ? ???
+     *
+     * @param key
+     *            ???key
+     * @param value
+     *            ?????
+     */
+    public void put(String key, byte[] value) {
+        File file = mCache.newFile(key);
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(file);
+            out.write(value);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (out != null) {
+                try {
+                    out.flush();
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            mCache.put(file);
+        }
+    }
+-------------------------------------------------------
+Method API calls:
+FileOutputStream.new
+FileOutputStream.write
+Exception.printStackTrace
+FileOutputStream.flush
+FileOutputStream.close
+IOException.printStackTrace

@@ -1,0 +1,270 @@
+Evaluation ID:2616
+Application Category:file
+Your Method's Feature Description: browse to file /directory
+-------------------------------------------------------
+Your Method's Body: 
+     /**
+      * Browse to some location by clicking on a list item.
+      * @param aDirectory
+      */
+     private void browseTo(final File aDirectory){ 
+          // setTitle(aDirectory.getAbsolutePath());
+          
+          if (aDirectory.isDirectory()){
+        	  if (aDirectory.equals(currentDirectory)) {
+        		  // Switch from button to directory input
+        		  showDirectoryInput(true);
+        	  } else {
+        		   mPreviousDirectory = currentDirectory;
+	               currentDirectory = aDirectory;
+	               refreshList();
+//	               selectInList(previousDirectory);
+	//               refreshDirectoryPanel();
+        	  }
+          }else{ 
+        	  if (mState == STATE_BROWSE || mState == STATE_PICK_DIRECTORY) {
+	              // Lets start an intent to View the file, that was clicked... 
+	        	  openFile(aDirectory); 
+        	  } else if (mState == STATE_PICK_FILE) {
+        		  // Pick the file
+        		  mEditFilename.setText(aDirectory.getName());
+        	  }
+          } 
+     }
+-------------------------------------------------------
+Your Method's API calls:
+File.isDirectory
+File.equals
+EditText.setText
+File.getName
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+	@Override
+	protected Dialog onCreateDialog(int id) {
+
+		switch (id) {
+		case DIALOG_NEW_FOLDER:
+			LayoutInflater inflater = LayoutInflater.from(this);
+			View view = inflater.inflate(R.layout.dialog_new_folder, null);
+			final EditText et = (EditText) view
+					.findViewById(R.id.foldername);
+			et.setText("");
+			return new AlertDialog.Builder(this)
+            	.setIcon(android.R.drawable.ic_dialog_alert)
+            	.setTitle(R.string.create_new_folder).setView(view).setPositiveButton(
+					android.R.string.ok, new OnClickListener() {
+						
+						public void onClick(DialogInterface dialog, int which) {
+							createNewFolder(et.getText().toString());
+						}
+						
+					}).setNegativeButton(android.R.string.cancel, new OnClickListener() {
+						
+						public void onClick(DialogInterface dialog, int which) {
+							// Cancel should not do anything.
+						}
+						
+					}).create();
+		
+
+		case DIALOG_DELETE:
+			return new AlertDialog.Builder(this).setTitle(getString(R.string.really_delete, mContextText))
+            	.setIcon(android.R.drawable.ic_dialog_alert).setPositiveButton(
+					android.R.string.ok, new OnClickListener() {
+						
+						public void onClick(DialogInterface dialog, int which) {
+							deleteFileOrFolder(mContextFile);
+						}
+						
+					}).setNegativeButton(android.R.string.cancel, new OnClickListener() {
+						
+						public void onClick(DialogInterface dialog, int which) {
+							// Cancel should not do anything.
+						}
+						
+					}).create();
+
+		case DIALOG_RENAME:
+			inflater = LayoutInflater.from(this);
+			view = inflater.inflate(R.layout.dialog_new_folder, null);
+			final EditText et2 = (EditText) view
+				.findViewById(R.id.foldername);
+			return new AlertDialog.Builder(this)
+            	.setTitle(R.string.menu_rename).setView(view).setPositiveButton(
+					android.R.string.ok, new OnClickListener() {
+						
+						public void onClick(DialogInterface dialog, int which) {
+							
+							renameFileOrFolder(mContextFile, et2.getText().toString());
+						}
+						
+					}).setNegativeButton(android.R.string.cancel, new OnClickListener() {
+						
+						public void onClick(DialogInterface dialog, int which) {
+							// Cancel should not do anything.
+						}
+						
+					}).create();
+			
+		}
+		return super.onCreateDialog(id);
+		
+	}
+-------------------------------------------------------
+Method API calls:
+LayoutInflater.from
+LayoutInflater.inflate
+View.findViewById
+EditText.setText
+OnClickListener.new
+EditText.getText
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+	static void storeEulaAccepted(Context context) {
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+		SharedPreferences.Editor e = sp.edit();
+		e.putBoolean(PREFERENCES_EULA_ACCEPTED, true);
+		e.commit();
+	}
+-------------------------------------------------------
+Method API calls:
+PreferenceManager.getDefaultSharedPreferences
+SharedPreferences.edit
+Editor.putBoolean
+Editor.commit
+-------------------------------------------------------
+Recommendation No. 3
+-------------------------------------------------------
+     private void setDirectoryButtons() {
+    	 String[] parts = currentDirectory.getAbsolutePath().split("/");
+    	 
+    	 mDirectoryButtons.removeAllViews();
+    	 
+    	 int MATCH_PARENT = LinearLayout.LayoutParams.MATCH_PARENT;
+    	 int WRAP_CONTENT = LinearLayout.LayoutParams.WRAP_CONTENT;
+    	 
+    	 // Add home button separately
+    	 ImageButton ib = new ImageButton(this);
+    	 ib.setImageResource(R.drawable.ic_launcher_home_small);
+		 ib.setLayoutParams(new LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT));
+		 ib.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View view) {
+				jumpTo(new File("/"));
+			}
+		 });
+		 mDirectoryButtons.addView(ib);
+		 
+    	 // Add other buttons
+    	 
+    	 String dir = "";
+    	 
+    	 for (int i = 1; i < parts.length; i++) {
+    		 dir += "/" + parts[i];
+    		 if (dir.equals(mSdCardPath)) {
+    			 // Add SD card button
+    			 ib = new ImageButton(this);
+    	    	 ib.setImageResource(R.drawable.icon_sdcard_small);
+    			 ib.setLayoutParams(new LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT));
+    			 ib.setOnClickListener(new View.OnClickListener() {
+    					public void onClick(View view) {
+    						jumpTo(new File(mSdCardPath));
+    					}
+    			 });
+    			 mDirectoryButtons.addView(ib);
+    		 } else {
+	    		 Button b = new Button(this);
+	    		 b.setLayoutParams(new LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT));
+	    		 b.setText(parts[i]);
+	    		 b.setTag(dir);
+	    		 b.setOnClickListener(new View.OnClickListener() {
+	 				public void onClick(View view) {
+	 					String dir = (String) view.getTag();
+	 					jumpTo(new File(dir));
+	 				}
+	    		 });
+    			 mDirectoryButtons.addView(b);
+    		 }
+    	 }
+    	 
+    	 checkButtonLayout();
+     }
+-------------------------------------------------------
+Method API calls:
+File.getAbsolutePath
+LinearLayout.removeAllViews
+ImageButton.new
+ImageButton.setImageResource
+ImageButton.setLayoutParams
+ImageButton.setOnClickListener
+File.new
+LinearLayout.addView
+String.equals
+Button.new
+Button.setLayoutParams
+Button.setText
+Button.setTag
+Button.setOnClickListener
+View.getTag
+-------------------------------------------------------
+Recommendation No. 4
+-------------------------------------------------------
+	private void sendFile(File file) {
+
+		String filename = file.getName();
+		String content = "hh";
+		
+		Log.i(TAG, "Title to send: " + filename);
+		Log.i(TAG, "Content to send: " + content);
+
+		Intent i = new Intent();
+		i.setAction(Intent.ACTION_SEND);
+		i.setType(mMimeTypes.getMimeType(file.getName()));
+		i.putExtra(Intent.EXTRA_SUBJECT, filename);
+		//i.putExtra(Intent.EXTRA_STREAM, FileUtils.getUri(file));
+		i.putExtra(Intent.EXTRA_STREAM, Uri.parse("content://" + FileManagerProvider.AUTHORITY + "/mimetype/" + file.getAbsolutePath()));
+
+		i = Intent.createChooser(i, getString(R.string.menu_send));
+		
+		try {
+			startActivity(i);
+		} catch (ActivityNotFoundException e) {
+			Toast.makeText(this, R.string.send_not_available,
+					Toast.LENGTH_SHORT).show();
+			Log.e(TAG, "Email client not installed");
+		}
+	}
+-------------------------------------------------------
+Method API calls:
+File.getName
+Uri.parse
+File.getAbsolutePath
+-------------------------------------------------------
+Recommendation No. 5
+-------------------------------------------------------
+	private void updateProgress(int progress, int maxProgress) {
+		// Only update the progress bar every n steps...
+		if ((progress % PROGRESS_STEPS) == 0) {
+			// Also don't update for the first second.
+			long curTime = SystemClock.uptimeMillis();
+			
+			if (curTime - operationStartTime < 1000L) {
+				return;
+			}
+			
+			// Okay, send an update.
+			Message msg = handler.obtainMessage(FileManagerActivity.MESSAGE_SET_PROGRESS);
+			msg.arg1 = progress;
+			msg.arg2 = maxProgress;
+			msg.sendToTarget();
+		}
+	}
+-------------------------------------------------------
+Method API calls:
+SystemClock.uptimeMillis
+Handler.obtainMessage
+Message.sendToTarget
