@@ -22,15 +22,15 @@ MariaDB [(none)]> create database <DB name>;
 Query OK, 1 row affected (0.02 sec)
 ```
 5. Enter \q to exit MariaDB environment
-
 ```
 MariaDB [(none)]> \q
 Bye
 ```
 6. Execute the following command to create FACER database schema using provided script
+```
 <your root>\FACER_Replication_Pack>mysql -u root -p <DB name> < FACER_schema.sql
 Enter password:
-
+```
 ### Downloading FACER dataset
 To download the FACER dataset:
 ```
