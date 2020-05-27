@@ -5,6 +5,7 @@ The following FACER replication setup instructions are for Windows OS.
 1. Java (https://www.java.com/en/download/)
 2. xampp (https://www.apachefriends.org/download.html)
 3. R (https://cran.r-project.org/bin/windows/base/old/3.5.1/)
+
 Configure path variables in your System's Environment Variables for <your root>\xampp\mysql\bin and <your root>\R-3.5.1\bin and <your root>\Java\jdk1.8.0_73\bin
 
 ### Creating FACER database
