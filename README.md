@@ -7,7 +7,7 @@ The following FACER replication setup instructions are for Windows OS.
 3. R (https://cran.r-project.org/bin/windows/base/old/3.5.1/)
 
 Configure path variables in your System's Environment Variables for <your root>\xampp\mysql\bin and <your root>\R-3.5.1\bin and <your root>\Java\jdk1.8.0_73\bin
-
+Please Start the Apache and MySQl Services using the XAMPP Control Panel before proceeding.
 ### Creating FACER database
 1. Download the FACER_Artifacts repository into your local hard drive
 2. Navigate to FACER_Artifacts\FACER_Replication_Pack
