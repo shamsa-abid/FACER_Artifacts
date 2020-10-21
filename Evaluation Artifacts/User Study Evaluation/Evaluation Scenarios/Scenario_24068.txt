@@ -1,0 +1,259 @@
+Evaluation ID:24068
+Application Category:music
+Your Method's Feature Description: play song
+-------------------------------------------------------
+Your Method's Body: 
+    public static void playSong(Context context, long id) {
+        switch (PreferenceManager.getDefaultSharedPreferences(context).getString(
+                SettingsActivity.CLICK_ON_SONG, SettingsActivity.PLAY_NEXT)) {
+            case SettingsActivity.PLAY_NOW:
+                MusicUtils.queueAndPlayImmediately(context, new long[] { id });
+                break;
+            case SettingsActivity.QUEUE:
+                MusicUtils.queue(context, new long[] { id });
+                break;
+            default:
+                MusicUtils.queueNextAndPlayIfNotAlreadyPlaying(context, new long[] { id });
+                break;
+        }
+    }
+-------------------------------------------------------
+Your Method's API calls:
+PreferenceManager.getDefaultSharedPreferences
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+    /**
+     * @return true if successful, false if failed
+     */
+    public boolean prepare(String path) {
+        try {
+            mMediaPlayer.reset();
+            mMediaPlayer.setOnPreparedListener(null);
+            if (path.startsWith("content://")) {
+                mMediaPlayer.setDataSource(mContext, Uri.parse(path));
+            } else {
+                mMediaPlayer.setDataSource(path);
+            }
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mMediaPlayer.prepare();
+        } catch (IOException | IllegalArgumentException e) {
+            Log.w(LOGTAG, "Couldn't open audio file: " + path, e);
+            mIsInitialized = false;
+            return false;
+        }
+        mMediaPlayer.setOnCompletionListener(listener);
+        mMediaPlayer.setOnErrorListener(errorListener);
+
+        Intent i = new Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION);
+        i.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, getAudioSessionId());
+        i.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, mContext.getPackageName());
+        mContext.sendBroadcast(i);
+
+        Log.d(LOGTAG, "Prepared song: " + path);
+
+        mIsInitialized = true;
+        return true;
+    }
+-------------------------------------------------------
+Method API calls:
+MediaPlayer.reset
+MediaPlayer.setOnPreparedListener
+String.startsWith
+MediaPlayer.setDataSource
+Uri.parse
+MediaPlayer.setAudioStreamType
+MediaPlayer.prepare
+MediaPlayer.setOnCompletionListener
+MediaPlayer.setOnErrorListener
+Context.getPackageName
+Context.sendBroadcast
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+        public boolean onError(MediaPlayer mp, int what, int extra) {
+            switch (what) {
+                case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                    Log.i(LOGTAG, "MediaPlayer died, restarting");
+                    mIsInitialized = false;
+                    mMediaPlayer.release();
+                    // Creating a new MediaPlayer and settings its wake mode does not
+                    // require the media service, so it's OK to do this now, while the
+                    // service is still being restarted
+                    mMediaPlayer = new MediaPlayer();
+                    mMediaPlayer.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK);
+                    mHandler.sendMessageDelayed(mHandler.obtainMessage(SERVER_DIED), 2000);
+                    return true;
+
+                default:
+                    Log.w(LOGTAG, "MediaPlayer error: " + what + "," + extra);
+                    return false;
+            }
+        }
+-------------------------------------------------------
+Method API calls:
+MediaPlayer.release
+MediaPlayer.new
+MediaPlayer.setWakeMode
+Handler.sendMessageDelayed
+Handler.obtainMessage
+-------------------------------------------------------
+Recommendation No. 3
+-------------------------------------------------------
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            TextView tv1 = (TextView) view.findViewById(R.id.line1);
+            TextView tv2 = (TextView) view.findViewById(R.id.line2);
+            ImageView iv = (ImageView) view.findViewById(R.id.icon);
+            ViewGroup.LayoutParams p = iv.getLayoutParams();
+            if (p == null) {
+                // seen this happen, not sure why
+                DatabaseUtils.dumpCursor(cursor);
+                return;
+            }
+            p.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+            p.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+
+            String mimeType = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.AudioColumns.MIME_TYPE));
+            if ("artist".equals(mimeType)) {
+                iv.setImageResource(R.drawable.ic_mp_artist_list);
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(
+                        MediaStore.Audio.Artists.ARTIST));
+                String displayname = name;
+                boolean isunknown = false;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown_artist_name);
+                    isunknown = true;
+                }
+                tv1.setText(displayname);
+
+                int numalbums = cursor.getInt(cursor.getColumnIndexOrThrow("data1"));
+                int numsongs = cursor.getInt(cursor.getColumnIndexOrThrow("data2"));
+
+                String songs_albums = MusicUtils.makeAlbumsSongsLabel(context,
+                        numalbums, numsongs, isunknown);
+
+                tv2.setText(songs_albums);
+            } else if ("album".equals(mimeType)) {
+                iv.setImageResource(R.drawable.albumart_mp_unknown_list);
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(
+                        MediaStore.Audio.Albums.ALBUM));
+                String displayname = name;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown_album_name);
+                }
+                tv1.setText(displayname);
+
+                name = cursor.getString(cursor.getColumnIndexOrThrow(
+                        MediaStore.Audio.Artists.ARTIST));
+                displayname = name;
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown_artist_name);
+                }
+                tv2.setText(displayname);
+            } else if (isSong(mimeType)) {
+                iv.setImageResource(R.drawable.ic_mp_song_list);
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(
+                        MediaStore.Audio.AudioColumns.TITLE));
+                tv1.setText(name);
+
+                String displayname = cursor.getString(cursor.getColumnIndexOrThrow(
+                        MediaStore.Audio.Artists.ARTIST));
+                if (displayname == null || displayname.equals(MediaStore.UNKNOWN_STRING)) {
+                    displayname = context.getString(R.string.unknown_artist_name);
+                }
+                name = cursor.getString(cursor.getColumnIndexOrThrow(
+                        MediaStore.Audio.Albums.ALBUM));
+                if (name == null || name.equals(MediaStore.UNKNOWN_STRING)) {
+                    name = context.getString(R.string.unknown_album_name);
+                }
+                tv2.setText(displayname + " - " + name);
+            }
+        }
+-------------------------------------------------------
+Method API calls:
+View.findViewById
+ImageView.getLayoutParams
+DatabaseUtils.dumpCursor
+Cursor.getString
+Cursor.getColumnIndexOrThrow
+ImageView.setImageResource
+String.equals
+Context.getString
+TextView.setText
+Cursor.getInt
+-------------------------------------------------------
+Recommendation No. 4
+-------------------------------------------------------
+    /**
+     * This is now only used for the query screen
+     */
+    public static String makeAlbumsSongsLabel(Context context, int numalbums, int numsongs, boolean isUnknown) {
+        // There are several formats for the albums/songs information:
+        // "1 Song"   - used if there is only 1 song
+        // "N Songs" - used for the "unknown artist" item
+        // "1 Album"/"N Songs" 
+        // "N Album"/"M Songs"
+        // Depending on locale, these may need to be further subdivided
+        
+        StringBuilder songs_albums = new StringBuilder();
+
+        if (numsongs == 1) {
+            songs_albums.append(context.getResources().getQuantityString(R.plurals.Nsongs, 1));
+        } else {
+            Resources r = context.getResources();
+            if (! isUnknown) {
+                String f = r.getQuantityText(R.plurals.Nalbums, numalbums).toString();
+                sFormatBuilder.setLength(0);
+                sFormatter.format(f, numalbums);
+                songs_albums.append(sFormatBuilder);
+                songs_albums.append(context.getString(R.string.albumsongseparator));
+            }
+            String f = r.getQuantityText(R.plurals.Nsongs, numsongs).toString();
+            sFormatBuilder.setLength(0);
+            sFormatter.format(f, numsongs);
+            songs_albums.append(sFormatBuilder);
+        }
+        return songs_albums.toString();
+    }
+-------------------------------------------------------
+Method API calls:
+StringBuilder.new
+StringBuilder.append
+Context.getResources
+Resources.getQuantityText
+StringBuilder.setLength
+Formatter.format
+Context.getString
+StringBuilder.toString
+HashMap<>.new
+-------------------------------------------------------
+Recommendation No. 5
+-------------------------------------------------------
+    public static String formatDuration(Context context, long millis) {
+        long secs = millis / 1000;
+        String durationformat = context.getString(
+                secs < 3600 ? R.string.durationformatshort : R.string.durationformatlong);
+
+        /* Provide multiple arguments so the format can be changed easily
+         * by modifying the xml.
+         */
+        sFormatBuilder.setLength(0);
+
+        final Object[] timeArgs = sTimeArgs;
+        timeArgs[0] = secs / 3600;
+        timeArgs[1] = secs / 60;
+        timeArgs[2] = (secs / 60) % 60;
+        timeArgs[3] = secs;
+        timeArgs[4] = secs % 60;
+
+        return sFormatter.format(durationformat, timeArgs).toString();
+    }
+-------------------------------------------------------
+Method API calls:
+Context.getString
+StringBuilder.setLength
+Formatter.format

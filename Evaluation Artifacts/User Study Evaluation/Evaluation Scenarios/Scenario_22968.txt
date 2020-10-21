@@ -1,0 +1,378 @@
+Evaluation ID:22968
+Application Category:music
+Your Method's Feature Description: download music
+-------------------------------------------------------
+Your Method's Body: 
+    private void startDownload(String downloadUrl, String fileName) {
+        final DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        DownloadManager.Request downloadRequest = new DownloadManager.Request(Uri.parse(downloadUrl));
+        downloadRequest.allowScanningByMediaScanner();
+        downloadRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        downloadRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, fileName);
+        downloadManager.enqueue(downloadRequest);
+    }
+-------------------------------------------------------
+Your Method's API calls:
+Uri.parse
+Request.allowScanningByMediaScanner
+Request.setNotificationVisibility
+Request.setDestinationInExternalPublicDir
+DownloadManager.enqueue
+======================================
+Related Methods:
+======================================
+-------------------------------------------------------
+Recommendation No. 1
+-------------------------------------------------------
+    public void onCreate(final SQLiteDatabase db) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("CREATE TABLE IF NOT EXISTS ");
+        builder.append(PlaybackQueueColumns.NAME);
+        builder.append("(");
+
+        builder.append(PlaybackQueueColumns.TRACK_ID);
+        builder.append(" LONG NOT NULL,");
+
+        builder.append(PlaybackQueueColumns.SOURCE_ID);
+        builder.append(" LONG NOT NULL,");
+
+        builder.append(PlaybackQueueColumns.SOURCE_TYPE);
+        builder.append(" INT NOT NULL,");
+
+        builder.append(PlaybackQueueColumns.SOURCE_POSITION);
+        builder.append(" INT NOT NULL);");
+
+        db.execSQL(builder.toString());
+
+        builder = new StringBuilder();
+        builder.append("CREATE TABLE IF NOT EXISTS ");
+        builder.append(PlaybackHistoryColumns.NAME);
+        builder.append("(");
+
+        builder.append(PlaybackHistoryColumns.POSITION);
+        builder.append(" INT NOT NULL);");
+
+        db.execSQL(builder.toString());
+    }
+-------------------------------------------------------
+Method API calls:
+StringBuilder.new
+StringBuilder.append
+SQLiteDatabase.execSQL
+StringBuilder.toString
+-------------------------------------------------------
+Recommendation No. 2
+-------------------------------------------------------
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+
+        action = getIntent().getAction();
+
+        isDarkTheme = PreferenceManager.getDefaultSharedPreferences(this).getBoolean("dark_theme", false);
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        navigationMap.put(Constants.NAVIGATE_LIBRARY, navigateLibrary);
+        navigationMap.put(Constants.NAVIGATE_PLAYLIST, navigatePlaylist);
+        navigationMap.put(Constants.NAVIGATE_QUEUE, navigateQueue);
+        navigationMap.put(Constants.NAVIGATE_NOWPLAYING, navigateNowplaying);
+        navigationMap.put(Constants.NAVIGATE_ALBUM, navigateAlbum);
+        navigationMap.put(Constants.NAVIGATE_ARTIST, navigateArtist);
+        navigationMap.put(Constants.NAVIGATE_LYRICS, navigateLyrics);
+
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        panelLayout = findViewById(R.id.sliding_layout);
+
+        navigationView = findViewById(R.id.nav_view);
+        View header = navigationView.inflateHeaderView(R.layout.nav_header);
+
+        albumart = header.findViewById(R.id.album_art);
+        songtitle = header.findViewById(R.id.song_title);
+        songartist = header.findViewById(R.id.song_artist);
+
+        setPanelSlideListeners(panelLayout);
+
+        navDrawerRunnable.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setupDrawerContent(navigationView);
+                setupNavigationIcons(navigationView);
+            }
+        }, 700);
+
+
+        if (TimberUtils.isMarshmallow()) {
+            checkPermissionAndThenLoad();
+            //checkWritePermissions();
+        } else {
+            loadEverything();
+            checkForUpdate();
+        }
+
+        addBackstackListener();
+
+        if (Intent.ACTION_VIEW.equals(action)) {
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    MusicPlayer.clearQueue();
+                    MusicPlayer.openFile(getIntent().getData().getPath());
+                    MusicPlayer.playOrPause();
+                    navigateNowplaying.run();
+                }
+            }, 350);
+        }
+
+        if (!panelLayout.isPanelHidden() && MusicPlayer.getTrackName() == null) {
+            panelLayout.hidePanel();
+        }
+
+        if (playServicesAvailable) {
+
+            final FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT);
+            params.gravity = Gravity.BOTTOM;
+
+            FrameLayout contentRoot = findViewById(R.id.content_root);
+            contentRoot.addView(LayoutInflater.from(this)
+                    .inflate(R.layout.fragment_cast_mini_controller, null), params);
+
+            findViewById(R.id.castMiniController).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startActivity(new Intent(MainActivity.this, ExpandedControllerActivity.class));
+                }
+            });
+        }
+
+    }
+-------------------------------------------------------
+Method API calls:
+PreferenceManager.getDefaultSharedPreferences
+Map<String,Runnable>.put
+NavigationView.inflateHeaderView
+View.findViewById
+Handler.postDelayed
+Runnable.new
+Intent.ACTION_VIEW.equals
+Handler.new
+Runnable.run
+FrameLayout.addView
+LayoutInflater.from
+-------------------------------------------------------
+Recommendation No. 3
+-------------------------------------------------------
+    private void loadLyrics() {
+
+        final View lyricsView = rootView.findViewById(R.id.lyrics);
+        final TextView poweredbyTextView = (TextView) lyricsView.findViewById(R.id.lyrics_makeitpersonal);
+        poweredbyTextView.setVisibility(View.GONE);
+        final TextView lyricsTextView = (TextView) lyricsView.findViewById(R.id.lyrics_text);
+        lyricsTextView.setText(getString(R.string.lyrics_loading));
+        String filename = getRealPathFromURI(Uri.parse(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI + "/" + MusicPlayer.getCurrentAudioId()));
+        if (filename != null && lyrics == null) {
+            lyrics = LyricsExtractor.getLyrics(new File(filename));
+        }
+
+        if (lyrics != null) {
+            lyricsTextView.setText(lyrics);
+        } else {
+            String artist = MusicPlayer.getArtistName();
+            if (artist != null) {
+                int i = artist.lastIndexOf(" feat");
+                if (i != -1) {
+                    artist = artist.substring(0, i);
+                }
+
+                LyricsLoader.getInstance(this.getContext()).getLyrics(artist, MusicPlayer.getTrackName(), new Callback<String>() {
+                    @Override
+                    public void success(String s, Response response) {
+                        lyrics = s;
+                        if (s.equals("Sorry, We don't have lyrics for this song yet.\n")) {
+                            lyricsTextView.setText(R.string.no_lyrics);
+                        } else {
+                            lyricsTextView.setText(s);
+                            poweredbyTextView.setVisibility(View.VISIBLE);
+                        }
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+                        lyricsTextView.setText(R.string.no_lyrics);
+                    }
+                });
+
+            } else {
+                lyricsTextView.setText(R.string.no_lyrics);
+            }
+        }
+    }
+-------------------------------------------------------
+Method API calls:
+View.findViewById
+TextView.setVisibility
+TextView.setText
+Uri.parse
+File.new
+String.lastIndexOf
+String.substring
+Callback<String>.new
+String.equals
+-------------------------------------------------------
+Recommendation No. 4
+-------------------------------------------------------
+    /**
+     * Tests scrollability within child views of v given a delta of dx.
+     *
+     * @param v      View to test for horizontal scrollability
+     * @param checkV Whether the view v passed should itself be checked for scrollability (true),
+     *               or just its children (false).
+     * @param dx     Delta scrolled in pixels along the X axis
+     * @param dy     Delta scrolled in pixels along the Y axis
+     * @param x      X coordinate of the active touch point
+     * @param y      Y coordinate of the active touch point
+     * @return true if child views of v can be scrolled by delta of dx.
+     */
+    protected boolean canScroll(View v, boolean checkV, int dx, int dy, int x, int y) {
+        if (v instanceof ViewGroup) {
+            final ViewGroup group = (ViewGroup) v;
+            final int scrollX = v.getScrollX();
+            final int scrollY = v.getScrollY();
+            final int count = group.getChildCount();
+            // Count backwards - let topmost views consume scroll distance first.
+            for (int i = count - 1; i >= 0; i--) {
+                // TODO: Add versioned support here for transformed views.
+                // This will not work for transformed views in Honeycomb+
+                final View child = group.getChildAt(i);
+                if (x + scrollX >= child.getLeft() && x + scrollX < child.getRight() &&
+                        y + scrollY >= child.getTop() && y + scrollY < child.getBottom() &&
+                        canScroll(child, true, dx, dy, x + scrollX - child.getLeft(),
+                                y + scrollY - child.getTop())) {
+                    return true;
+                }
+            }
+        }
+
+        return checkV && (ViewCompat.canScrollHorizontally(v, -dx) ||
+                ViewCompat.canScrollVertically(v, -dy));
+    }
+-------------------------------------------------------
+Method API calls:
+View.getScrollX
+View.getScrollY
+ViewGroup.getChildCount
+ViewGroup.getChildAt
+View.getLeft
+View.getRight
+View.getTop
+View.getBottom
+ViewCompat.canScrollHorizontally
+ViewCompat.canScrollVertically
+-------------------------------------------------------
+Recommendation No. 5
+-------------------------------------------------------
+    /**
+     * Method that reads the requested file
+     */
+    private void readFile() {
+        // For now editor is not dirty and editable.
+        setDirty(false);
+        this.mBinary = false;
+
+        // Check for a valid action
+        String action = getIntent().getAction();
+        if (action == null ||
+                (action.compareTo(Intent.ACTION_VIEW) != 0) &&
+                (action.compareTo(Intent.ACTION_EDIT) != 0)) {
+            DialogHelper.showToast(
+                    this, R.string.editor_invalid_file_msg, Toast.LENGTH_SHORT);
+            return;
+        }
+        // This var should be set depending on ACTION_VIEW or ACTION_EDIT action, but for
+        // better compatibility, IntentsActionPolicy use always ACTION_VIEW, so we have
+        // to ignore this check here
+        this.mReadOnly = false;
+
+        // Read the intent and check that is has a valid request
+        Intent fileIntent = getIntent();
+        if (fileIntent.getData().getScheme().equals("content")) {
+            asyncReadContentURI(fileIntent.getData());
+            this.mTitle.setText(fileIntent.getDataString());
+        } else {
+            // File Scheme URI's
+            String path = uriToPath(this, getIntent().getData());
+            if (path == null || path.length() == 0) {
+                DialogHelper.showToast(
+                        this, R.string.editor_invalid_file_msg, Toast.LENGTH_SHORT);
+                return;
+            }
+
+            // Set the title of the dialog
+            File f = new File(path);
+            this.mTitle.setText(f.getName());
+
+            // Check that the file exists (the real file, not the symlink)
+            try {
+                this.mFso = CommandHelper.getFileInfo(this, path, true, null);
+                if (this.mFso == null) {
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to get file reference", e); //$NON-NLS-1$
+            }
+
+            // Check that we can handle the length of the file (by device)
+            if (this.mMaxFileSize < this.mFso.getSize()) {
+                DialogHelper.showToast(
+                        this, R.string.editor_file_exceed_size_msg, Toast.LENGTH_SHORT);
+                return;
+            }
+
+            // Get the syntax highlight processor
+            SyntaxHighlightFactory shpFactory =
+                    SyntaxHighlightFactory.getDefaultFactory(new ResourcesResolver());
+            this.mSyntaxHighlightProcessor = shpFactory.getSyntaxHighlightProcessor(f);
+            if (this.mSyntaxHighlightProcessor != null) {
+                this.mSyntaxHighlightProcessor.initialize();
+            }
+
+            // Check that we have read access
+            try {
+                FileHelper.ensureReadAccess(
+                        ConsoleBuilder.getConsole(this),
+                        this.mFso,
+                        null);
+
+                // Read the file in background
+                asyncRead();
+
+            } catch (Exception ex) {
+                ExceptionUtil.translateException(
+                        this, ex, false, true, new OnRelaunchCommandResult() {
+                            @Override
+                            public void onSuccess() {
+                                // Read the file in background
+                                asyncRead();
+                            }
+
+                            @Override
+                            public void onFailed(Throwable cause) {
+                                    finish();
+                                }
+
+                            @Override
+                            public void onCancelled() {
+                                    finish();
+                                }
+                        });
+            }
+        }
+    }
+-------------------------------------------------------
+Method API calls:
+String.compareTo
+String.length
+File.new
+File.getName
