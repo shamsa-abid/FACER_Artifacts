@@ -1,0 +1,113 @@
+**********************************
+Cluster ID: 445
+**********************************
+-----------------------------
+Project ID:36
+Method ID:2484
+Method Name:copyDirectory
+File Name:F:\FACER_2020\RawSourceCodeDataset\ClonedNew\file_2bb85ea657e0a014ee3ad82095e4be85d1aafd71\android-filemanager-2bb85ea657e0a014ee3ad82095e4be85d1aafd71\src\com\example\myapp\ASyncCopyFiles.java
+Method Body:
+	public void copyDirectory(File sourceLocation, File targetLocation) throws IOException {
+		if (sourceLocation.isDirectory() && sourceLocation.exists()) {
+			if (!targetLocation.exists()) {
+				targetLocation.mkdir();
+			}
+
+			String[] children = sourceLocation.list();
+			for (int i = 0; i < children.length; i++) {
+				copyDirectory(new File(sourceLocation, children[i]), new File(
+						targetLocation, children[i]));
+			}
+		} else {
+
+			InputStream in = new FileInputStream(sourceLocation);
+			OutputStream out = new FileOutputStream(targetLocation);
+
+			// Copy the bits from instream to outstream
+			byte[] buf = new byte[1024];
+			int len;
+			while ((len = in.read(buf)) > 0) {
+				out.write(buf, 0, len);
+			}
+			in.close();
+			in = null;
+			out.flush();
+			out.close();
+			out = null;
+		}
+	}
+-----------------------------
+Project ID:39
+Method ID:2728
+Method Name:copy
+File Name:F:\FACER_2020\RawSourceCodeDataset\ClonedNew\file_369c9cd4750d42ab4c3cc2e5a69cc37f3edd4dbe\FileManager-369c9cd4750d42ab4c3cc2e5a69cc37f3edd4dbe\src\main\java\com\bmeath\filemanager\FileHelpers.java
+Method Body:
+    public static boolean copy(String[] paths)
+    {
+        InputStream in;
+        OutputStream out;
+        File src, dst;
+        String srcPath, dstPath;
+
+        try {
+            dstPath = paths[paths.length - 1];
+            dst = new File(dstPath);
+
+            for (int i = 0; i < paths.length - 1; i++) {
+                srcPath = paths[i];
+                src = new File(srcPath);
+
+                if (src.isDirectory()) {
+                    if (!dst.exists()) {
+                        dst.mkdirs();
+                    }
+
+                    String[] files = src.list();
+                    // recursively copy all sub-items
+                    for (int j = 0; j < files.length; j++) {
+                        copy(new File(src, files[j]).getCanonicalPath(), new File(dst, files[j]).getCanonicalPath());
+                    }
+                } else {
+                    in = new FileInputStream(srcPath);
+
+                    if (new File(dstPath).isDirectory()) {
+                        dstPath += File.separator + src.getName();
+                    }
+
+                    if (new File(dstPath).exists()) {
+                        dstPath = renameCopy(dstPath);
+                    }
+
+                    out = new FileOutputStream(dstPath);
+
+                    byte[] buffer = new byte[1024];
+                    int read;
+                    while ((read = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, read);
+                    }
+
+                    in.close();
+                    out.flush();
+                    out.close();
+                }
+            }
+            return true;
+        } catch (FileNotFoundException fnfe) {
+            fnfe.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+Common API Calls:
+File.isDirectory
+File.exists
+File.list
+File.new
+FileInputStream.new
+FileOutputStream.new
+InputStream.read
+OutputStream.write
+InputStream.close
+OutputStream.flush
+OutputStream.close
