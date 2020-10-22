@@ -1,0 +1,188 @@
+-----------------------------------------------------------
+Your Method
+-----------------------------------------------------------
+Method Name:main
+Method Body:
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		
+		EventQueue.invokeLater(new Runnable() {
+			Hotel hotel = Hotel.getInstance();
+			public void run() {
+				try {
+					
+					loginPage window = new loginPage();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+Method API calls:
+EventQueue.invokeLater
+Runnable.new
+JFrame.setVisible
+Exception.printStackTrace
+-----------------------------------------------------------
+Recommended Method No. 1
+-----------------------------------------------------------
+Method Name:AddDishes
+Method Body:
+	/**
+	 * Create the frame.
+	 */
+	public AddDishes() {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowOpened(WindowEvent e) {
+				
+				displayDishes();
+			}
+		});
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(0, 0, 972, 611);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JLabel lblDishName = new JLabel("DISH NAME");
+		lblDishName.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		lblDishName.setBounds(33, 211, 155, 22);
+		contentPane.add(lblDishName);
+		
+		JLabel lblD = new JLabel("DISH PRICE");
+		lblD.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		lblD.setBounds(33, 284, 155, 27);
+		contentPane.add(lblD);
+		
+		JLabel lblDishType = new JLabel("DISH TYPE");
+		lblDishType.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		lblDishType.setBounds(33, 353, 155, 27);
+		contentPane.add(lblDishType);
+		
+		d1 = new JTextField();
+		d1.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		d1.setBounds(182, 207, 232, 30);
+		contentPane.add(d1);
+		d1.setColumns(10);
+		
+		d2 = new JTextField();
+		d2.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		d2.setBounds(182, 282, 232, 30);
+		contentPane.add(d2);
+		d2.setColumns(10);
+		
+		d3 = new JTextField();
+		d3.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		d3.setBounds(182, 351, 232, 30);
+		contentPane.add(d3);
+		d3.setColumns(10);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(456, 194, 418, 279);
+		contentPane.add(scrollPane);
+		
+		table = new JTable();
+		scrollPane.setViewportView(table);
+		
+		JButton btnAddDish = new JButton("ADD DISH");
+		btnAddDish.setIcon(new ImageIcon("images\\plus (1).png"));
+		btnAddDish.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				addDishes();
+				
+			}
+		});
+		btnAddDish.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		btnAddDish.setBounds(45, 486, 176, 53);
+		contentPane.add(btnAddDish);
+		
+		JButton btnDeleteDish = new JButton("DELETE DISH");
+		btnDeleteDish.setIcon(new ImageIcon("images\\iconfinder_f-cross_256_282471 (1).png"));
+		btnDeleteDish.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				deleteDishes();
+			}
+		});
+		btnDeleteDish.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		btnDeleteDish.setBounds(245, 486, 221, 53);
+		contentPane.add(btnDeleteDish);
+		
+		JButton btnUpdateDish = new JButton("UPDATE DISH");
+		btnUpdateDish.setIcon(new ImageIcon("images\\updated.png"));
+		btnUpdateDish.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+                 updateDishes();
+			}
+		});
+		btnUpdateDish.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		btnUpdateDish.setBounds(502, 486, 221, 53);
+		contentPane.add(btnUpdateDish);
+		
+		JButton btnBack = new JButton("BACK");
+		btnBack.setIcon(new ImageIcon("images\\back.png"));
+		btnBack.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				AdminForm af = new AdminForm();
+				af.setVisible(true);
+				af.pack();
+				af.setLocationRelativeTo(null);
+			
+				af.setBounds(100, 100, 1080, 633);
+				setVisible(false);
+			}
+		});
+		btnBack.setFont(new Font("High Tower Text", Font.BOLD, 20));
+		btnBack.setBounds(765, 486, 143, 53);
+		contentPane.add(btnBack);
+		
+		JLabel label = new JLabel("");
+		label.setBounds(879, 100, 239, 163);
+		contentPane.add(label);
+		
+		JLabel lblNewLabel = new JLabel("");
+		lblNewLabel.setIcon(new ImageIcon("images\\34.jpg"));
+		lblNewLabel.setBounds(0, 0, 300, 195);
+		contentPane.add(lblNewLabel);
+		
+		JLabel label_1 = new JLabel("");
+		label_1.setIcon(new ImageIcon("images\\i3.jpg"));
+		label_1.setBounds(310, -1, 319, 195);
+		contentPane.add(label_1);
+		
+		JLabel lblNewLabel_1 = new JLabel("");
+		lblNewLabel_1.setIcon(new ImageIcon("images\\cock.jpg"));
+		lblNewLabel_1.setBounds(623, 0, 331, 195);
+		contentPane.add(lblNewLabel_1);
+	}
+Method API calls:
+WindowAdapter.new
+JPanel.new
+JPanel.setBorder
+EmptyBorder.new
+JPanel.setLayout
+JLabel.new
+JLabel.setFont
+Font.new
+JLabel.setBounds
+JPanel.add
+JTextField.new
+JTextField.setFont
+JTextField.setBounds
+JTextField.setColumns
+JScrollPane.new
+JScrollPane.setBounds
+JTable.new
+JScrollPane.setViewportView
+JButton.new
+JButton.setIcon
+ImageIcon.new
+JButton.addActionListener
+ActionListener.new
+JButton.setFont
+JButton.setBounds
+JLabel.setIcon

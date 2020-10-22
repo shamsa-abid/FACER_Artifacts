@@ -1,0 +1,116 @@
+-----------------------------------------------------------
+Your Method
+-----------------------------------------------------------
+Method Name:btnLogOut
+Method Body:
+    @FXML
+    void btnLogOut(ActionEvent event) throws IOException {
+        try{
+            ((Node)event.getSource()).getScene().getWindow().hide();
+            Stage primaryStage = new Stage();
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(DashBoardController.class.getResource("LoginPage.fxml"));
+            AnchorPane root = (AnchorPane) loader.load();
+            Scene scene = new Scene(root);
+            primaryStage.setScene(scene);
+            scene.setFill(new Color(0, 0, 0, 0));
+            primaryStage.initStyle(StageStyle.TRANSPARENT);
+            primaryStage.setTitle("Welcome to SIMS-Login");
+            primaryStage.getIcons().add(new Image("resources/images/Briefcase.png"));
+            primaryStage.setMaximized(false);
+            primaryStage.setResizable(false);
+            primaryStage.setMinHeight(500.0);
+            primaryStage.setMinWidth(850.0);
+            primaryStage.show();
+            
+        } catch(Exception e){
+        }
+    }
+Method API calls:
+ActionEvent.getSource
+Stage.new
+FXMLLoader.new
+FXMLLoader.setLocation
+FXMLLoader.load
+Scene.new
+Stage.setScene
+Scene.setFill
+Color.new
+Stage.initStyle
+Stage.setTitle
+Stage.getIcons
+Image.new
+Stage.setMaximized
+Stage.setResizable
+Stage.setMinHeight
+Stage.setMinWidth
+Stage.show
+-----------------------------------------------------------
+Recommended Method No. 1
+-----------------------------------------------------------
+Method Name:randomAplphaNum
+Method Body:
+    public static String randomAplphaNum(int count){
+       StringBuilder builder = new StringBuilder();
+       while(count-- != 0){
+           int character = (int)(Math.random()*ALPHA_NUM_STRING.length());
+           builder.append(ALPHA_NUM_STRING.charAt(character));
+       }
+       return builder.toString();
+   }
+Method API calls:
+StringBuilder.new
+Math.random
+String.length
+StringBuilder.append
+String.charAt
+StringBuilder.toString
+-----------------------------------------------------------
+Recommended  Method No. 2
+-----------------------------------------------------------
+Method Name:isInputValid
+Method Body:
+    /**
+     * Validates the user input in the text fields.
+     * 
+     * @return true if the input is valid
+     */
+    private boolean isInputValid() {
+        String errorMessage = "";
+
+        if (getProductID.getText().isEmpty() && getProductName.getText().isEmpty()
+                && getSellingPrice.getText().isEmpty() && getPurchasePrice.getText().isEmpty()
+                && getQuantity.getText().isEmpty() && getCategory.getText().isEmpty() && getBrand.getText().isEmpty()
+                && getTotalPrice.getText().isEmpty() && getDescription.getText().isEmpty()) {
+            errorMessage += "No valid Selection(Must make a Selection)!\n"; 
+        }
+              
+        if (getSalesDate.toString().isEmpty()) {
+            errorMessage += "No valid Date Choosen!\n";
+        } 
+       
+        if (errorMessage.length() == 0) {
+            return true;
+        } else {
+            // Show the error message.
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initOwner(dialogStage);
+            alert.setTitle("No Product Selected!!!");
+            alert.setHeaderText("Please Select Products for Sales");
+            alert.setContentText(errorMessage);
+
+            alert.showAndWait();
+
+            return false;
+        }
+    }
+Method API calls:
+Label.getText
+JFXDatePicker.toString
+String.length
+Alert.new
+Alert.initOwner
+Alert.setTitle
+Alert.setHeaderText
+Alert.setContentText
+Alert.showAndWait

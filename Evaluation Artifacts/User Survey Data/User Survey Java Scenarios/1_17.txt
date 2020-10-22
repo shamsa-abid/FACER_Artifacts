@@ -1,0 +1,45 @@
+-----------------------------------------------------------
+Your Method
+-----------------------------------------------------------
+Method Name:loadData
+Method Body:
+	@Override
+	public void loadData() {
+		int sel = getSelected() == null ? -1 : getSelected().getAdmissionId();
+		try {
+			List<Admission> list = searchInput.getText().equals("") ? AdmissionData.getList()
+					: AdmissionData.getBySearch(searchInput.getText());
+			tableData.removeAll(tableData);
+			for (Admission p : list) {
+				tableData.add(p);
+			}
+		} catch (DBException e) {
+			Global.log(e.getMessage());
+		}
+
+		if (sel > 0) {
+			setSelected(sel);
+		}
+	}
+Method API calls:
+TextField.getText
+ObservableList.removeAll
+ObservableList.add
+-----------------------------------------------------------
+Recommended Method No. 1
+-----------------------------------------------------------
+Method Name:showConfirmation
+Method Body:
+	public static ButtonType showConfirmation(String message, String title){
+		Alert a = new Alert(AlertType.CONFIRMATION, null, ButtonType.YES, ButtonType.NO);
+		a.setTitle(title);
+		a.setHeaderText(message);
+		Optional<ButtonType> result = a.showAndWait();
+		return result.get();
+	}
+Method API calls:
+Alert.new
+Alert.setTitle
+Alert.setHeaderText
+Alert.showAndWait
+Optional<ButtonType>.get

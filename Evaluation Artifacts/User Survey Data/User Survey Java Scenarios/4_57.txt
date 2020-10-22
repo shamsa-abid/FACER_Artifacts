@@ -1,0 +1,70 @@
+-----------------------------------------------------------
+Your Method
+-----------------------------------------------------------
+Method Name:save
+Method Body:
+	public static int save(BookBean bean)
+	{
+		int status=0;
+		try{
+			Connection con=DB.getCon();
+			PreparedStatement ps=con.prepareStatement("insert into e_book values(?,?,?,?,?,?)");
+			ps.setString(1,bean.getCallno());
+			ps.setString(2,bean.getName());
+			ps.setString(3,bean.getAuthor());
+			ps.setString(4,bean.getPublisher());
+			ps.setInt(5,bean.getQuantity());
+			ps.setInt(6,0);
+			status=ps.executeUpdate();
+			con.close();
+			
+		}catch(Exception e){System.out.println(e);}
+		
+		return status;
+	}
+Method API calls:
+Connection.prepareStatement
+PreparedStatement.setString
+PreparedStatement.setInt
+PreparedStatement.executeUpdate
+Connection.close
+PrintStream.println
+-----------------------------------------------------------
+Recommended Method No. 1
+-----------------------------------------------------------
+Method Name:view
+Method Body:
+	public static List<BookBean> view()
+	{
+		List<BookBean> list = new ArrayList<BookBean>();
+		try{
+			Connection con = DB.getCon();
+			PreparedStatement ps = con.prepareStatement("select * from e_book");
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				BookBean bean = new BookBean();
+				bean.setCallno(rs.getString("callno"));
+				bean.setName(rs.getString("name"));
+				bean.setAuthor(rs.getString("author"));
+				bean.setPublisher(rs.getString("publisher"));
+				bean.setQuantity(rs.getInt("quantity"));
+				bean.setIssued(rs.getInt("issued"));
+				list.add(bean);
+				
+			}
+			con.close();
+		}catch(Exception e){
+			System.out.println(e);
+		}
+		return list;
+	}
+Method API calls:
+ArrayList<BookBean>.new
+Connection.prepareStatement
+PreparedStatement.executeQuery
+ResultSet.next
+ResultSet.getString
+ResultSet.getInt
+List<BookBean>.add
+Connection.close
+PrintStream.println
